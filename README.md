@@ -48,14 +48,9 @@ To ensure fair comparison, all competing models (including the proposed LSDF-UNe
 
 [//]: # (![img.png]&#40;img.png&#41;)
 
-**Table 1. Quantitative comparison of ConDSeg with state-of-the-art methods on Kvasir-Sessile, Kvasir-SEG and GlaS datasets.**
+**Table 1. Quantitative comparison of DGL-UNet with state-of-the-art methods on ISIC-2018, Kvasir, COVID-19, and Moun-Seg.**
 <div>
     <img src="figures/comp1.jpg" width="80%" height="96%">
-</div>
-
-**Table 2. Quantitative comparison of ConDSeg with state-of-the-art methods on ISIC-2016 and ISIC-2017 datasets.**
-<div>
-    <img src="figures/comp2.jpg" width="45%" height="40%">
 </div>
 
 <br> </br>
