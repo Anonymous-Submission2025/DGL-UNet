@@ -1,5 +1,5 @@
 <div align="center">
-<h1> LSDF-UNet: Lightweight Large-Small Network with Dual-Size Patch Frequency Aware for Medical Image Segmentation </h1>
+<h1> DGL-UNet: A Diagnosis-Guided Lightweight Network with Direction-Aware Convolutions for Medical Image Segmentation </h1>
 </div>
 
 ##  News
