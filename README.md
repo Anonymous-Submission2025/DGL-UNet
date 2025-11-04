@@ -11,7 +11,7 @@
   <sup>2</sup>Baidu Inc, Beijing, China<br>
 </p> -->
 
-    <p align="center">
+  <p align="center"> 
   <!-- Contact Badge -->
   <a href="107552404008@stu.xju.edu.cn" target="_blank">
      <img src="https://img.shields.io/badge/Contact-107552404008@stu.xju.edu.cn-blue.svg?style=default" alt="Contact Author"> 
