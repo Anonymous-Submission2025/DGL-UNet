@@ -2,18 +2,12 @@ import torch.nn as nn
 
 from .backbone import enconder1,enconder2_3,enconder4
 from .backbone import decoder_1_2_3,decoder4
-from .MPNS import DPFA
 
 
-class LSDF_Unet(nn.Module):
+class DGL-UNet(nn.Module):
     def __init__(self,input_channels=3, out_channels:list=None,kernel_list=None):
         super().__init__()
         #encoding
-        # self.en1=DFFM(out_channels[0],out_channels[1],sample=True,up=False,kernel_list=kernel_list,patchsizes=[32,128])
-        # self.en2=DFFM(out_channels[1],out_channels[2],sample=True,up=False,kernel_list=kernel_list,patchsizes=[16,64])
-        # self.en3=DFFM(out_channels[2],out_channels[3],sample=True,up=False,kernel_list=kernel_list,patchsizes=[8,32])
-        # self.en4=DFFM(out_channels[3],out_channels[4],sample=True,up=False,kernel_list=kernel_list,patchsizes=[4,16])
-
         self.en1=enconder1(out_channels[0],out_channels[1])
         self.en2=enconder2_3(out_channels[1],out_channels[2])
         self.en3=enconder2_3(out_channels[2],out_channels[3])
@@ -32,13 +26,6 @@ class LSDF_Unet(nn.Module):
             nn.BatchNorm2d(out_channels[0])
         )
 
-        #swin
-        self.swim1 = DPFA(out_channels[1],ffn_expansion_factor=4,bias=True,patch_sizes=[16,64])
-        self.swim2 = DPFA(out_channels[2],ffn_expansion_factor=4,bias=True,patch_sizes=[8,32])
-        self.swim3 = DPFA(out_channels[3],ffn_expansion_factor=4,bias=True,patch_sizes=[4,16])
-        
-
-
         #prediction
         self.ph=PH(out_channels)
         
@@ -51,12 +38,6 @@ class LSDF_Unet(nn.Module):
         e2=self.en2(e1)
         e3=self.en3(e2)
         e4=self.en4(e3)
-
-
-        #swin
-        e1=self.swim1(e1)
-        e2=self.swim2(e2)
-        e3=self.swim3(e3)
 
 
         #decoding
@@ -103,3 +84,4 @@ class PH(nn.Module):
         x3=self.ph3(x3)
         x4=self.ph4(x4)
         return [x1,x2,x3,x4]
+
