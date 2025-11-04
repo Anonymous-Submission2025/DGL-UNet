@@ -68,43 +68,43 @@ To ensure fair comparison, all competing models (including the proposed LSDF-UNe
 
 
 ## Getting Started🚀
-### Data Preparation
-The dataset should be organised as follows,taking Kvasir-SEG as an example:
-```text
-Kvasir-SEG
-├── images
-│   ├── cju0qkwl35piu0993l0dewei2.jpg
-│   ├── cju0qoxqj9q6s0835b43399p4.jpg
-│   ├── cju0qx73cjw570799j4n5cjze.jpg
-│   ├── ...
-├── masks
-│   ├── cju0qkwl35piu0993l0dewei2.jpg
-│   ├── cju0qoxqj9q6s0835b43399p4.jpg
-│   ├── cju0qx73cjw570799j4n5cjze.jpg
-│   ├── ...
-├── train.txt
-├── val.txt
+### 1. Install Environment
+
+```
+conda create -n DGL-UNet python=3.10
+conda activate DGL-UNet
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install packaging
+pip install timm
+pip install pytest chardet yacs termcolor
+pip install submitit tensorboardX
+pip install triton
+pip install scikit-learn matplotlib thop h5py SimpleITK scikit-image medpy yacs PyWavelets
 ```
 
-### Training
-- To train the first stage of ConDSeg, run: `train_stage1.py`.
-- To train the second stage of ConDSeg, add the weights of the first stage to the `train.py` script and run it.
+### 2. Prepare Datasets
 
-### Evaluation
-- To evaluate the model and generate the prediction results, run: `test.py`.
-
-### Another Version Using Transformer Encoder
-If you are interested in the version of ConDSeg that uses the Pyramid Vision Transformer as the Encoder, please see `./network_pvt`.
+- Download datasets: ISIC2018 from this [link](https://challenge.isic-archive.com/data/#2018), Kvasir from this[link](https://link.zhihu.com/?target=https%3A//datasets.simula.no/downloads/kvasir-seg.zip), and Moun-Seg from this [link](https://www.kaggle.com/datasets/tuanledinh/monuseg2018).
 
 
-## Cite our work📝
-```bibtex
-@article{lei2024condseg,
-  title={ConDSeg: A General Medical Image Segmentation Framework via Contrast-Driven Feature Enhancement},
-  author={Lei, Mengqi and Wu, Haochen and Lv, Xinhua and Wang, Xin},
-  journal={arXiv preprint arXiv:2412.08345},
-  year={2024}
-}
+- Folder organization: put datasets into ./data/datasets folder.
+
+### 3. Train the DGL-UNet
+
+```
+python train.py --datasets ISIC2018
+training records is saved to ./log folder
+pre-training file is saved to ./checkpoints/ISIC2018/best.pth
+concrete information see train.py, please
+```
+
+### 3. Test the DGL-UNet
+
+```
+python test.py --datasets ISIC2018
+testing records is saved to ./log folder
+testing results are saved to ./Test/ISIC2018/images folder
+concrete information see test.py, please
 ```
 
 ## License📜
