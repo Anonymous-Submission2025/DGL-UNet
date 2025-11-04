@@ -11,15 +11,10 @@
   <sup>2</sup>Baidu Inc, Beijing, China<br>
 </p> -->
 
-<!-- <p align="center">
-  <!-- arXiv Badge -->
-  <a href="https://arxiv.org/abs/2412.08345" target="_blank">
-    <img src="https://img.shields.io/badge/arXiv-2412.08345-b31b1b.svg?style=default" alt="arXiv Paper">
-  </a> -->
     
   <!-- Contact Badge -->
   <a href="107552404008@stu.xju.edu.cn" target="_blank">
-     <img src="https://img.shields.io/badge/Contact-mengqi--lei%40163.com-blue.svg?style=default" alt="Contact Author"> 
+     <img src="https://img.shields.io/badge/Contact-107552404008@stu.xju.edu.cn-blue.svg?style=default" alt="Contact Author"> 
   </a>
 </p>
 
