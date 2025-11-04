@@ -21,7 +21,7 @@
 
 ## Overview🔍
 <div>
-    <img src="figures/framework.jpg" width="96%" height="96%">
+    <img src="asserts/model.png" width="96%" height="96%">
 </div>
 
 **Figure 1. The framework of the proposed ConDSeg.**
