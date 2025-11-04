@@ -32,13 +32,13 @@ Through extensive experiments on four medical image datasets, it is demonstrated
 ## Datasets📚
 To verify the performance and general applicability of our DGL-UNet in the field of medical image segmentation, we conducted experiments on four challenging public datasets: ISIC-2018, Kvasir, COVID-19, and Moun-Seg, covering subdivision tasks across four modalities. 
 
-| Dataset      | Modality                  | Anatomic Region | Segmentation Target | Data Volume |
-|--------------|---------------------------|-----------------|---------------------|-------------|
-| Kvasir-SEG   | endoscope                 | colon           | polyp               | 1000        |
-| Kvasir-Sessile | endoscope               | colon           | polyp               | 196         |
-| GlaS         | whole-slide image (WSI)   | colorectum      | gland               | 165         |
-| ISIC-2016    | dermoscope                | skin            | malignant skin lesion | 1279       |
-| ISIC-2017    | dermoscope                | skin            | malignant skin lesion | 2750       |
+| Dataset      | Modality                  | Anatomic Region | Segmentation Target |
+|--------------|---------------------------|-----------------|---------------------|
+| ISIC-2018    | dermoscope                | skin            | malignant skin lesion |
+| Kvasir       | endoscope                 | colon           | polyp               |
+| COVID-19     | CT (Computed Tomography)  | Lungs           | Lungs               |
+| MoNuSeg      | MoNuSeg                   | Multiple organs | Nuclei              |
+
 
 To ensure fair comparison, all competing models (including the proposed LSDF-UNet and the baseline models) followed the same training setup: the AdamW optimizer was used with the CosineAnnealingLR dynamic learning rate scheduling strategy, the input image was uniformly resized to 256×256 resolution, and data augmentation was performed through horizontal/vertical flipping and random rotations. The training cycle is 200 epochs, the initial learning rate is 1e-3, and the batch size is fixed to 8.
 
