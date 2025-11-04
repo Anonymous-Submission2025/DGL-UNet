@@ -19,7 +19,7 @@
     
   <!-- Contact Badge -->
   <a href="107552404008@stu.xju.edu.cn" target="_blank">
-    <!-- <img src="https://img.shields.io/badge/Contact-mengqi--lei%40163.com-blue.svg?style=default" alt="Contact Author"> -->
+     <img src="https://img.shields.io/badge/Contact-mengqi--lei%40163.com-blue.svg?style=default" alt="Contact Author"> 
   </a>
 </p>
 
