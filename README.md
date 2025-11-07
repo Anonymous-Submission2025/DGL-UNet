@@ -55,11 +55,6 @@ To ensure fair comparison, all competing models (including the proposed LSDF-UNe
 
 <br> </br>
 
-<div>
-    <img src="figures/vis.jpg" width="96%" height="96%">
-</div>
-
-**Figure 2. Visualization of results comparing with other methods.**
 
 
 ## Getting Started🚀
