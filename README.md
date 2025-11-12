@@ -42,18 +42,7 @@ To verify the performance and general applicability of our DGL-UNet in the field
 
 To ensure fair comparison, all competing models (including the proposed LSDF-UNet and the baseline models) followed the same training setup: the AdamW optimizer was used with the CosineAnnealingLR dynamic learning rate scheduling strategy, the input image was uniformly resized to 256×256 resolution, and data augmentation was performed through horizontal/vertical flipping and random rotations. The training cycle is 200 epochs, the initial learning rate is 1e-3, and the batch size is fixed to 8.
 
-## Experimental Results🏆
 
-[//]: # (![img.png]&#40;figures/comp_1.png&#41;)
-
-[//]: # (![img.png]&#40;img.png&#41;)
-
-**Table 1. Quantitative comparison of DGL-UNet with state-of-the-art methods on ISIC-2018, Kvasir, COVID-19, and Moun-Seg.**
-<div>
-    <img src="figures/comp1.jpg" width="80%" height="96%">
-</div>
-
-<br> </br>
 
 
 
