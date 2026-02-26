@@ -171,18 +171,17 @@ class FeatureInspector(nn.Module):
 
 
 class DAC(nn.Module):
-    def __init__(self, dim, groups=8, kernel_size=3):
+    def __init__(self, in_channels, out_channels, kernel_size=3, groups=8):
         super().__init__()
-        self.groups = min(groups, dim)
+        
+        self.groups = min(groups, in_channels)
         self.kernel_size = kernel_size
         self.padding = (kernel_size - 1) // 2
         
-        #
-        assert dim % self.groups == 0, f"dim({dim}) must be divisible by groups({self.groups})"
-        self.group_channels = dim // self.groups  
+        assert in_channels % self.groups == 0, "Channels must be divisible by groups"
+        self.group_channels = in_channels // self.groups
         
-        # Basic convolution kernel：[groups, out_per_group, in_per_group, kH, kW]
-        # out_per_group = in_per_group = group_channels
+       
         self.base_kernel = nn.Parameter(
             torch.randn(self.groups, self.group_channels, self.group_channels, kernel_size, kernel_size)
         )
@@ -191,89 +190,73 @@ class DAC(nn.Module):
         
         self.angle_predictor = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(dim, max(dim // 4, 4), kernel_size=1),
+            nn.Conv2d(in_channels, max(in_channels // 4, 4), kernel_size=1),
             nn.ReLU(),
-            nn.Conv2d(max(dim // 4, 4), self.groups, kernel_size=1),
-            nn.Tanh()
-        )
-        
-        
-        self.meta = nn.Sequential(
-            nn.AdaptiveAvgPool2d(1),
-            nn.Conv2d(dim, max(dim // 4, 1), 1),
-            nn.ReLU(),
-            nn.Conv2d(max(dim // 4, 1), dim, 1),
-            nn.Sigmoid()
+            nn.Conv2d(max(in_channels // 4, 4), self.groups, kernel_size=1),
+            nn.Tanh() # Output: [-1, 1]
         )
 
     def forward(self, x):
         B, C, H, W = x.shape
         G = self.groups
-        C_g = self.group_channels  
+        C_g = self.group_channels
         
         
-        angles = self.angle_predictor(x)  # [B, G, 1, 1]
-        angles = angles * (math.pi / 4)  # [-π/4, π/4]
+        angles = self.angle_predictor(x) * (math.pi / 4) # Map to [-45°, 45°]
+        
         
         base_kernel_expanded = self.base_kernel.unsqueeze(0).expand(B, -1, -1, -1, -1, -1)
-        
-        
         rotated_kernels = []
+        
+       
         for b in range(B):
             batch_kernels = []
             for g in range(G):
-                # [C_g, C_g, kH, kW]
                 single_kernel = base_kernel_expanded[b, g]
-                # [1, 1, 1, 1]
                 single_angle = angles[b, g].view(1, 1, 1, 1)
-                
-                # [C_g, C_g, kH, kW]
-                rotated_single = rotate_kernel(single_kernel, single_angle)  # [C_g, C_g, kH, kW]
-                batch_kernels.append(rotated_single)
+                batch_kernels.append(rotate_kernel(single_kernel, single_angle))
+            rotated_kernels.append(torch.stack(batch_kernels, dim=0))
             
-            # [G, C_g, C_g, kH, kW]
-            rotated_batch = torch.stack(batch_kernels, dim=0)
-            rotated_kernels.append(rotated_batch)
-        
-        # [B, G, C_g, C_g, kH, kW]
         rotated_kernels = torch.stack(rotated_kernels, dim=0)
-        
-        # 3. [B, C, C_g, kH, kW]（C = G*C_g）
+        # Reshape: [B, Out, In/Groups, kH, kW]
         rotated_kernels = rotated_kernels.reshape(B, C, C_g, self.kernel_size, self.kernel_size)
         
-        
+       
         feat_list = []
         for b in range(B):
-            x_b = x[b:b+1]  # [1, C, H, W]
-            kernel_b = rotated_kernels[b]  # [C, C_g, kH, kW]
-            # groups=G
-            feat_b = F.conv2d(x_b, kernel_b, padding=self.padding, groups=G)
-            feat_list.append(feat_b)
-        
-        # [B, C, H, W]
-        feat = torch.cat(feat_list, dim=0)
-        
-        
-        mod = self.meta(x)
-        return feat * mod
+            feat_list.append(F.conv2d(x[b:b+1], rotated_kernels[b], padding=self.padding, groups=G))
+            
+        return torch.cat(feat_list, dim=0)
 
 
 class BoundaryRefiner(nn.Module):
-    def __init__(self, dim):
+def __init__(self, dim):
         super().__init__()
-        self.groups = min(dim, 8)
-        
-        if dim % self.groups != 0:
-            self.groups = 1
         
         
-        self.branches = nn.ModuleList([
-            DAC(dim, self.groups) for _ in range(4)
-        ])
+        groups = min(dim, 8)
+        if dim % groups != 0: groups = 1
         
+        
+        self.branches = nn.ModuleList()
+        self.branch_metas = nn.ModuleList() # 将 meta 分离出来，或者封装成一个小Block均可
+        
+        for _ in range(4):
+           
+            self.branches.append(DAConv2d(dim, dim, kernel_size=3, groups=groups))
+            
+            
+            self.branch_metas.append(nn.Sequential(
+                nn.AdaptiveAvgPool2d(1),
+                nn.Conv2d(dim, max(dim // 4, 1), 1),
+                nn.ReLU(),
+                nn.Conv2d(max(dim // 4, 1), dim, 1),
+                nn.Sigmoid()
+            ))
+
         
         self.dir_attn = nn.Sequential(
-            Conv2d_BN(dim * 4, dim, ks=1),
+            Conv2d_BN(dim * 4, dim, ks=1), # 假设 Conv2d_BN 你有定义
             nn.ReLU(),
             nn.Conv2d(dim, 4, kernel_size=1),
             nn.Softmax(dim=1)
@@ -288,18 +271,27 @@ class BoundaryRefiner(nn.Module):
         )
 
     def forward(self, x, roi_mask):
+        B, C, H, W = x.shape
         
-        branch_feats = [branch(x) for branch in self.branches]
-        B, C, H, W = branch_feats[0].shape
         
+        branch_feats = []
+        for conv, meta in zip(self.branches, self.branch_metas):
+            feat = conv(x)       
+            mod = meta(x)        
+            branch_feats.append(feat * mod)
+            
         
         feats_cat = torch.cat(branch_feats, dim=1)
         attn_weights = self.dir_attn(feats_cat)
+        
         fused = 0
-        for i in range(len(self.branches)):
-            fused += branch_feats[i] * attn_weights[:, i:i+1, :, :].expand_as(branch_feats[i])
+        for i, feat in enumerate(branch_feats):
+            fused += feat * attn_weights[:, i:i+1, :, :].expand_as(feat)
+        
+        
         roi_resized = F.interpolate(roi_mask, size=(H, W), mode='bilinear', align_corners=True)
         enhancement = self.edge_attn(fused * roi_resized)
+        
         return x + x * enhancement
 
 
