@@ -20,9 +20,7 @@
 
 
 ## Overview🔍
-<div>
-    <img src="asserts/model.png" width="96%" height="96%">
-</div>
+
 
 **Figure 1. The framework of the proposed DGL-UNet.**
 
