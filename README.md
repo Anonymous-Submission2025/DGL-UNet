@@ -1,5 +1,5 @@
 
-<h2 align="center">✨DGL-UNet: A Diagnosis-Guided Lightweight Network with Direction-Aware Convolutions for Medical Image Segmentation</h2>
+<h2 align="center">✨DGL-UNet: A Diagnosis-Guided Learning  Network with Direction-Aware Convolutions for Medical Image Segmentation</h2>
 
 
 <!-- <p align="center">
