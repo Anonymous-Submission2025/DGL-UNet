@@ -170,7 +170,7 @@ class FeatureInspector(nn.Module):
         return verified_feat
 
 
-class DAC(nn.Module):
+class DAConv2d(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, groups=8):
         super().__init__()
         
@@ -181,7 +181,7 @@ class DAC(nn.Module):
         assert in_channels % self.groups == 0, "Channels must be divisible by groups"
         self.group_channels = in_channels // self.groups
         
-       
+        
         self.base_kernel = nn.Parameter(
             torch.randn(self.groups, self.group_channels, self.group_channels, kernel_size, kernel_size)
         )
@@ -193,7 +193,7 @@ class DAC(nn.Module):
             nn.Conv2d(in_channels, max(in_channels // 4, 4), kernel_size=1),
             nn.ReLU(),
             nn.Conv2d(max(in_channels // 4, 4), self.groups, kernel_size=1),
-            nn.Tanh() # Output: [-1, 1]
+            nn.Tanh() 
         )
 
     def forward(self, x):
@@ -202,7 +202,7 @@ class DAC(nn.Module):
         C_g = self.group_channels
         
         
-        angles = self.angle_predictor(x) * (math.pi / 4) # Map to [-45°, 45°]
+        angles = self.angle_predictor(x) * (math.pi / 4) 
         
         
         base_kernel_expanded = self.base_kernel.unsqueeze(0).expand(B, -1, -1, -1, -1, -1)
@@ -218,10 +218,10 @@ class DAC(nn.Module):
             rotated_kernels.append(torch.stack(batch_kernels, dim=0))
             
         rotated_kernels = torch.stack(rotated_kernels, dim=0)
-        # Reshape: [B, Out, In/Groups, kH, kW]
+        
         rotated_kernels = rotated_kernels.reshape(B, C, C_g, self.kernel_size, self.kernel_size)
         
-       
+        
         feat_list = []
         for b in range(B):
             feat_list.append(F.conv2d(x[b:b+1], rotated_kernels[b], padding=self.padding, groups=G))
@@ -230,39 +230,25 @@ class DAC(nn.Module):
 
 
 class BoundaryRefiner(nn.Module):
-def __init__(self, dim):
+    def __init__(self, dim):
         super().__init__()
         
         
         groups = min(dim, 8)
         if dim % groups != 0: groups = 1
         
-        
-        self.branches = nn.ModuleList()
-        self.branch_metas = nn.ModuleList() # 将 meta 分离出来，或者封装成一个小Block均可
-        
-        for _ in range(4):
-           
-            self.branches.append(DAConv2d(dim, dim, kernel_size=3, groups=groups))
+       
+        self.conv = DAConv2d(dim, dim, kernel_size=3, groups=groups)
             
-            
-            self.branch_metas.append(nn.Sequential(
-                nn.AdaptiveAvgPool2d(1),
-                nn.Conv2d(dim, max(dim // 4, 1), 1),
-                nn.ReLU(),
-                nn.Conv2d(max(dim // 4, 1), dim, 1),
-                nn.Sigmoid()
-            ))
-
-        
-        self.dir_attn = nn.Sequential(
-            Conv2d_BN(dim * 4, dim, ks=1), # 假设 Conv2d_BN 你有定义
+       
+        self.channel_mod = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
+            nn.Conv2d(dim, max(dim // 4, 1), 1),
             nn.ReLU(),
-            nn.Conv2d(dim, 4, kernel_size=1),
-            nn.Softmax(dim=1)
+            nn.Conv2d(max(dim // 4, 1), dim, 1),
+            nn.Sigmoid()
         )
-        
-        
+
         self.edge_attn = nn.Sequential(
             Conv2d_BN(dim, max(dim // 2, 1), ks=1),
             nn.ReLU(),
@@ -274,22 +260,14 @@ def __init__(self, dim):
         B, C, H, W = x.shape
         
         
-        branch_feats = []
-        for conv, meta in zip(self.branches, self.branch_metas):
-            feat = conv(x)       
-            mod = meta(x)        
-            branch_feats.append(feat * mod)
-            
-        
-        feats_cat = torch.cat(branch_feats, dim=1)
-        attn_weights = self.dir_attn(feats_cat)
-        
-        fused = 0
-        for i, feat in enumerate(branch_feats):
-            fused += feat * attn_weights[:, i:i+1, :, :].expand_as(feat)
+        feat = self.conv(x)          
+        mod = self.channel_mod(x)    
+        fused = feat * mod           
         
         
         roi_resized = F.interpolate(roi_mask, size=(H, W), mode='bilinear', align_corners=True)
+        
+        
         enhancement = self.edge_attn(fused * roi_resized)
         
         return x + x * enhancement
